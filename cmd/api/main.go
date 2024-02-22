@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -21,16 +23,16 @@ type Port struct {
 }
 
 type application struct {
-	config config
-	client *Client
-	server *Server
-	log    *log.Logger
-	wg     sync.WaitGroup
+	config  config
+	client  *Client
+	server  *Server
+	scanner *Scanner
+	log     *log.Logger
+	wg      sync.WaitGroup
 }
 
 func main() {
 	var cfg config
-	var openHosts []string
 
 	flag.IntVar(&cfg.port.server, "port", 5555, "TCP port")
 	flag.IntVar(&cfg.port.client, "client", 5555, "TCP client port")
@@ -40,35 +42,48 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 
 	app := &application{
-		config: cfg,
-		log:    infoLog,
-		client: &Client{port: cfg.port.client},
-		server: &Server{port: cfg.port.server},
+		config:  cfg,
+		log:     infoLog,
+		client:  &Client{port: cfg.port.client},
+		server:  &Server{port: cfg.port.server},
+		scanner: &Scanner{timeout: 500 * time.Millisecond},
 	}
 
-	hosts, err := app.getLocalIps()
-	if err != nil {
-		app.log.Fatal(err)
+	host, cidr := app.scanner.getLocalIpAndCIDR()
+	fmt.Println("Local IP: ", host)
+	app.scanner.cidr = cidr
+
+	ipRange := app.scanner.generateIPRange()
+
+	jobs := make(chan int, len(ipRange))
+	results := make(chan string, len(ipRange))
+
+	cores := runtime.NumCPU()
+
+	for range cores {
+		go app.scanner.worker(jobs, results, &ipRange)
 	}
 
-	for _, host := range hosts {
-		if app.isPortOpen(host.String(), cfg.port.server, 1*time.Second) {
-			openHosts = append(openHosts, host.String())
-		}
+	for i := range ipRange {
+		jobs <- i
 	}
+	close(jobs)
 
-	app.wg.Add(1)
+	for ip := range results {
+		fmt.Println("Host reachable:", ip)
+	}
+	// app.wg.Add(1)
+
+	// // go func() {
+	// // 	defer app.wg.Done()
+	// // 	app.client.connect()
+	// // }()
 
 	// go func() {
 	// 	defer app.wg.Done()
-	// 	app.client.connect()
+	// 	app.server.connect()
 	// }()
 
-	go func() {
-		defer app.wg.Done()
-		app.server.connect()
-	}()
-
-	app.wg.Wait()
+	// app.wg.Wait()
 
 }
