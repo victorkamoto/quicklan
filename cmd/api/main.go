@@ -44,7 +44,7 @@ func main() {
 		log:     infoLog,
 		client:  &Client{port: cfg.port.client},
 		server:  &Server{port: cfg.port.server},
-		scanner: &Scanner{timeout: 500 * time.Millisecond, wg: &sync.WaitGroup{}, log: infoLog},
+		scanner: &Scanner{port: cfg.port.server, timeout: 500 * time.Millisecond, wg: &sync.WaitGroup{}, log: infoLog},
 		wg:      sync.WaitGroup{},
 	}
 

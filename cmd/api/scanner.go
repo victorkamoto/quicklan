@@ -8,11 +8,10 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	probing "github.com/prometheus-community/pro-bing"
 )
 
 type Scanner struct {
+	port    int
 	cidr    string
 	timeout time.Duration
 	wg      *sync.WaitGroup
@@ -84,11 +83,7 @@ func (scanner *Scanner) getLocalIpAndCIDR() (net.IP, string) {
 func (scanner *Scanner) generateIPRange() []string {
 	ips := make([]string, 0)
 
-	ip, ipNet, err := net.ParseCIDR(scanner.cidr)
-	if err != nil {
-		scanner.log.Println("Error parsing CIDR:", err)
-		return ips
-	}
+	ip, ipNet, _ := net.ParseCIDR(scanner.cidr)
 
 	for ip := ip.Mask(ipNet.Mask); ipNet.Contains(ip); scanner.incIP(ip) {
 		ips = append(ips, ip.String())
@@ -115,36 +110,9 @@ func (scanner *Scanner) isQuickLanUp(ip string, port int) bool {
 	return true
 }
 
-func (scanner *Scanner) isHostReachable(ip string) bool {
-	pinger, err := probing.NewPinger(ip)
-	if err != nil {
-		// panic(err)
-		scanner.log.Println(err.Error())
-	}
-
-	pinger.Count = 3
-	pinger.SetPrivileged(true)
-
-	err = pinger.Run()
-	if err != nil {
-		// panic(err)
-		scanner.log.Println(err.Error())
-	}
-
-	stats := pinger.Statistics()
-	scanner.log.Printf("Stats: %+v\n", stats)
-	if stats.PacketsRecv > 0 {
-		return true
-	} else {
-		return false
-	}
-}
-
 func (scanner *Scanner) worker(jobs <-chan string, results chan<- string) {
-	scanner.log.Println("Worker started")
 	for ip := range jobs {
-		scanner.log.Println("Scanning IP: ", ip)
-		up := scanner.isHostReachable(ip)
+		up := scanner.isQuickLanUp(ip, 80)
 		if up {
 			results <- ip
 		}
