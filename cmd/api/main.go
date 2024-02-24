@@ -26,7 +26,7 @@ type application struct {
 	server  *Server
 	scanner *Scanner
 	log     *log.Logger
-	wg      sync.WaitGroup
+	wg      *sync.WaitGroup
 }
 
 func main() {
@@ -39,13 +39,15 @@ func main() {
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 
+	wg := sync.WaitGroup{}
+
 	app := &application{
 		config:  cfg,
 		log:     infoLog,
 		client:  &Client{port: cfg.port.client},
 		server:  &Server{port: cfg.port.server},
-		scanner: &Scanner{port: cfg.port.server, timeout: 1 * time.Second, wg: &sync.WaitGroup{}, log: infoLog},
-		wg:      sync.WaitGroup{},
+		scanner: &Scanner{port: cfg.port.server, timeout: 1 * time.Second, wg: &wg, log: infoLog},
+		wg:      &wg,
 	}
 
 	openHosts := make(chan string, buffer)
