@@ -45,16 +45,24 @@ func (scanner *Scanner) scan(openHosts chan<- string, time time.Time) {
 	close(jobs)
 }
 
-func (scanner *Scanner) getActiveInterface() string {
-	out, err := exec.Command("sh", "-c", "ip route | awk '/default/ { print $5 }'").Output()
-	// TODO: Better error handling
-	if err != nil {
-		scanner.log.Println("Error:", err)
-		return ""
+func (scanner *Scanner) worker(jobs <-chan string, results chan<- string, start time.Time) {
+	for ip := range jobs {
+		scanner.wg.Add(1)
+		go func(ip string) {
+			defer scanner.wg.Done()
+			scanner.isQuickLanUp(ip, 80, results)
+		}(ip)
 	}
+	scanner.log.Println("Scan duration:", time.Since(start))
+}
 
-	activeInterface := strings.TrimSpace(string(out))
-	return activeInterface
+func (scanner *Scanner) isQuickLanUp(ip string, port int, results chan<- string) {
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), scanner.timeout)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	results <- ip
 }
 
 func (scanner *Scanner) getLocalIpAndCIDR() (net.IP, string) {
@@ -82,6 +90,18 @@ func (scanner *Scanner) getLocalIpAndCIDR() (net.IP, string) {
 
 }
 
+func (scanner *Scanner) getActiveInterface() string {
+	out, err := exec.Command("sh", "-c", "ip route | awk '/default/ { print $5 }'").Output()
+	// TODO: Better error handling
+	if err != nil {
+		scanner.log.Println("Error:", err)
+		return ""
+	}
+
+	activeInterface := strings.TrimSpace(string(out))
+	return activeInterface
+}
+
 func (scanner *Scanner) generateIPRange() []string {
 	ips := make([]string, 0)
 
@@ -101,23 +121,4 @@ func (scanner *Scanner) incIP(ip net.IP) {
 			break
 		}
 	}
-}
-
-func (scanner *Scanner) isQuickLanUp(ip string, port int) bool {
-	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), scanner.timeout)
-	if err != nil {
-		return false
-	}
-	defer conn.Close()
-	return true
-}
-
-func (scanner *Scanner) worker(jobs <-chan string, results chan<- string, start time.Time) {
-	for ip := range jobs {
-		up := scanner.isQuickLanUp(ip, 80)
-		if up {
-			results <- ip
-		}
-	}
-	scanner.log.Println("Scan duration:", time.Since(start))
 }
