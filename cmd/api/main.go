@@ -46,23 +46,20 @@ func main() {
 		log:     infoLog,
 		client:  &Client{port: cfg.port.client},
 		server:  &Server{port: cfg.port.server},
-		scanner: &Scanner{port: cfg.port.server, timeout: 1 * time.Second, wg: &wg, log: infoLog},
+		scanner: &Scanner{port: cfg.port.server, timeout: 1 * time.Second, wg: &wg, log: infoLog, jobsBuffer: 1000},
 		wg:      &wg,
 	}
 
-	openHosts := make(chan string, buffer)
+	openHosts := make(chan string, app.scanner.jobsBuffer)
 
-	start := time.Now()
 	app.wg.Add(1)
 	go func() {
 		defer app.wg.Done()
-		app.scanner.scan(openHosts, start)
+		app.scanner.scan(openHosts)
 	}()
 
 	for ip := range openHosts {
 		app.log.Println("Host reachable:", ip)
-
-		app.log.Println("Host found in:", time.Since(start))
 	}
 
 	app.wg.Wait()
