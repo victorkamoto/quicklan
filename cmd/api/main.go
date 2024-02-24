@@ -2,10 +2,8 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
-	"runtime"
 	"sync"
 	"time"
 )
@@ -46,44 +44,23 @@ func main() {
 		log:     infoLog,
 		client:  &Client{port: cfg.port.client},
 		server:  &Server{port: cfg.port.server},
-		scanner: &Scanner{timeout: 500 * time.Millisecond},
+		scanner: &Scanner{timeout: 500 * time.Millisecond, wg: &sync.WaitGroup{}, log: infoLog},
+		wg:      sync.WaitGroup{},
 	}
 
-	host, cidr := app.scanner.getLocalIpAndCIDR()
-	fmt.Println("Local IP: ", host)
-	app.scanner.cidr = cidr
+	openHosts := make(chan string)
 
-	ipRange := app.scanner.generateIPRange()
+	app.wg.Add(1)
+	go func() {
+		defer app.wg.Done()
+		app.scanner.scan(openHosts)
+	}()
 
-	jobs := make(chan int, len(ipRange))
-	results := make(chan string, len(ipRange))
-
-	cores := runtime.NumCPU()
-
-	for range cores {
-		go app.scanner.worker(jobs, results, &ipRange)
+	for ip := range openHosts {
+		app.log.Println("Host reachable:", ip)
 	}
 
-	for i := range ipRange {
-		jobs <- i
-	}
-	close(jobs)
-
-	for ip := range results {
-		fmt.Println("Host reachable:", ip)
-	}
-	// app.wg.Add(1)
-
-	// // go func() {
-	// // 	defer app.wg.Done()
-	// // 	app.client.connect()
-	// // }()
-
-	// go func() {
-	// 	defer app.wg.Done()
-	// 	app.server.connect()
-	// }()
-
-	// app.wg.Wait()
+	app.wg.Wait()
+	close(openHosts)
 
 }

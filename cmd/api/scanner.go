@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	probing "github.com/prometheus-community/pro-bing"
@@ -13,13 +15,40 @@ import (
 type Scanner struct {
 	cidr    string
 	timeout time.Duration
+	wg      *sync.WaitGroup
+	log     *log.Logger
+}
+
+func (scanner *Scanner) scan(openHosts chan<- string) {
+	host, cidr := scanner.getLocalIpAndCIDR()
+	scanner.log.Println("Local IP: ", host)
+	scanner.log.Println("CIDR: ", cidr)
+	scanner.cidr = cidr
+
+	ipRange := scanner.generateIPRange()
+	scanner.log.Println("IP Range: ", len(ipRange))
+
+	jobs := make(chan string, 100)
+
+	for range ipRange {
+		scanner.wg.Add(1)
+		go func() {
+			defer scanner.wg.Done()
+			scanner.worker(jobs, openHosts)
+		}()
+	}
+
+	for _, ip := range ipRange {
+		jobs <- ip
+	}
+	close(jobs)
 }
 
 func (scanner *Scanner) getActiveInterface() string {
 	out, err := exec.Command("sh", "-c", "ip route | awk '/default/ { print $5 }'").Output()
 	// TODO: Better error handling
 	if err != nil {
-		fmt.Println("Error:", err)
+		scanner.log.Println("Error:", err)
 		return ""
 	}
 
@@ -57,7 +86,7 @@ func (scanner *Scanner) generateIPRange() []string {
 
 	ip, ipNet, err := net.ParseCIDR(scanner.cidr)
 	if err != nil {
-		fmt.Println("Error parsing CIDR:", err)
+		scanner.log.Println("Error parsing CIDR:", err)
 		return ips
 	}
 
@@ -90,7 +119,7 @@ func (scanner *Scanner) isHostReachable(ip string) bool {
 	pinger, err := probing.NewPinger(ip)
 	if err != nil {
 		// panic(err)
-		fmt.Println(err.Error())
+		scanner.log.Println(err.Error())
 	}
 
 	pinger.Count = 3
@@ -99,11 +128,11 @@ func (scanner *Scanner) isHostReachable(ip string) bool {
 	err = pinger.Run()
 	if err != nil {
 		// panic(err)
-		fmt.Println(err.Error())
+		scanner.log.Println(err.Error())
 	}
 
 	stats := pinger.Statistics()
-	fmt.Printf("Stats: %+v\n", stats)
+	scanner.log.Printf("Stats: %+v\n", stats)
 	if stats.PacketsRecv > 0 {
 		return true
 	} else {
@@ -111,14 +140,13 @@ func (scanner *Scanner) isHostReachable(ip string) bool {
 	}
 }
 
-func (scanner *Scanner) worker(jobs <-chan int, results chan<- string, ipRange *[]string) {
-	fmt.Println("Worker started")
-	for i := range jobs {
-		host := (*ipRange)[i]
-		fmt.Println("Checking host:", host)
-		up := scanner.isHostReachable(host)
+func (scanner *Scanner) worker(jobs <-chan string, results chan<- string) {
+	scanner.log.Println("Worker started")
+	for ip := range jobs {
+		scanner.log.Println("Scanning IP: ", ip)
+		up := scanner.isHostReachable(ip)
 		if up {
-			results <- host
+			results <- ip
 		}
 	}
 }
