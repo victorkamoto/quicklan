@@ -22,11 +22,16 @@ type Port struct {
 
 type application struct {
 	config  config
+	state   *State
 	client  *Client
 	server  *Server
 	scanner *Scanner
 	log     *log.Logger
 	wg      *sync.WaitGroup
+}
+
+type State struct {
+	Hosts []string
 }
 
 func main() {
@@ -42,6 +47,7 @@ func main() {
 	wg := sync.WaitGroup{}
 
 	app := &application{
+		state:   &State{},
 		config:  cfg,
 		log:     infoLog,
 		client:  &Client{port: cfg.port.client},
@@ -55,14 +61,19 @@ func main() {
 	app.wg.Add(1)
 	go func() {
 		defer app.wg.Done()
+		defer close(openHosts)
 		app.scanner.scan(openHosts)
 	}()
 
 	for ip := range openHosts {
 		app.log.Println("Host reachable:", ip)
+		app.state.Hosts = append(app.state.Hosts, ip)
 	}
 
 	app.wg.Wait()
-	close(openHosts)
+
+	for _, ip := range app.state.Hosts {
+		app.log.Println("Saved host:", ip)
+	}
 
 }
