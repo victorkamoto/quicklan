@@ -68,6 +68,9 @@ func (scanner *Scanner) getLocalIpAndCIDR() (net.IP, string) {
 	var cidr string
 
 	activeInterface := scanner.getActiveInterface()
+	if activeInterface == "" {
+		scanner.log.Fatal("No active network interface")
+	}
 
 	iface, _ := net.InterfaceByName(activeInterface)
 
