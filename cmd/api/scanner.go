@@ -15,11 +15,12 @@ type Scanner struct {
 	cidr       string
 	jobsBuffer int
 	timeout    time.Duration
-	wg         *sync.WaitGroup
 	log        *log.Logger
 }
 
 func (scanner *Scanner) scan(openHosts chan<- string) {
+	wg := sync.WaitGroup{}
+
 	host, cidr := scanner.getLocalIpAndCIDR()
 	scanner.log.Println("Local IP: ", host)
 	scanner.log.Println("CIDR: ", cidr)
@@ -31,9 +32,9 @@ func (scanner *Scanner) scan(openHosts chan<- string) {
 	jobs := make(chan string, scanner.jobsBuffer)
 
 	for range ipRange {
-		scanner.wg.Add(1)
+		wg.Add(1)
 		go func() {
-			defer scanner.wg.Done()
+			defer wg.Done()
 			scanner.worker(jobs, openHosts)
 		}()
 	}
@@ -42,16 +43,22 @@ func (scanner *Scanner) scan(openHosts chan<- string) {
 		jobs <- ip
 	}
 	close(jobs)
+
+	wg.Wait()
 }
 
 func (scanner *Scanner) worker(jobs <-chan string, results chan<- string) {
+	wg := sync.WaitGroup{}
+
 	for ip := range jobs {
-		scanner.wg.Add(1)
+		wg.Add(1)
 		go func(ip string) {
-			defer scanner.wg.Done()
+			defer wg.Done()
 			scanner.isQuickLanUp(ip, 80, results)
 		}(ip)
 	}
+
+	wg.Wait()
 }
 
 func (scanner *Scanner) isQuickLanUp(ip string, port int, results chan<- string) {

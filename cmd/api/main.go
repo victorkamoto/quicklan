@@ -27,7 +27,6 @@ type application struct {
 	server  *Server
 	scanner *Scanner
 	log     *log.Logger
-	wg      *sync.WaitGroup
 }
 
 type State struct {
@@ -52,15 +51,14 @@ func main() {
 		log:     infoLog,
 		client:  &Client{port: cfg.port.client},
 		server:  &Server{port: cfg.port.server},
-		scanner: &Scanner{port: cfg.port.server, timeout: 1 * time.Second, wg: &wg, log: infoLog, jobsBuffer: 1000},
-		wg:      &wg,
+		scanner: &Scanner{port: cfg.port.server, timeout: 1 * time.Second, log: infoLog, jobsBuffer: 1000},
 	}
 
 	openHosts := make(chan string, app.scanner.jobsBuffer)
 
-	app.wg.Add(1)
+	wg.Add(1)
 	go func() {
-		defer app.wg.Done()
+		defer wg.Done()
 		defer close(openHosts)
 		app.scanner.scan(openHosts)
 	}()
@@ -70,7 +68,7 @@ func main() {
 		app.state.Hosts = append(app.state.Hosts, ip)
 	}
 
-	app.wg.Wait()
+	wg.Wait()
 
 	for _, ip := range app.state.Hosts {
 		app.log.Println("Saved host:", ip)
