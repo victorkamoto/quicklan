@@ -4,34 +4,10 @@ import (
 	"flag"
 	"log"
 	"os"
-	"sync"
 	"time"
 )
 
 const version = "1.0.0"
-
-type config struct {
-	port Port
-	env  string
-}
-
-type Port struct {
-	client int
-	server int
-}
-
-type application struct {
-	config  config
-	state   *State
-	client  *Client
-	server  *Server
-	scanner *Scanner
-	log     *log.Logger
-}
-
-type State struct {
-	Hosts []string
-}
 
 func main() {
 	var cfg config
@@ -43,8 +19,6 @@ func main() {
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 
-	wg := sync.WaitGroup{}
-
 	app := &application{
 		state:   &State{},
 		config:  cfg,
@@ -54,21 +28,7 @@ func main() {
 		scanner: &Scanner{port: cfg.port.server, timeout: 1 * time.Second, log: infoLog, jobsBuffer: 1000},
 	}
 
-	openHosts := make(chan string, app.scanner.jobsBuffer)
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer close(openHosts)
-		app.scanner.scan(openHosts)
-	}()
-
-	for ip := range openHosts {
-		app.log.Println("Host reachable:", ip)
-		app.state.Hosts = append(app.state.Hosts, ip)
-	}
-
-	wg.Wait()
+	app.runScanner()
 
 	for _, ip := range app.state.Hosts {
 		app.log.Println("Saved host:", ip)
