@@ -48,17 +48,11 @@ func (scanner *Scanner) scan(openHosts chan<- string) {
 }
 
 func (scanner *Scanner) worker(jobs <-chan string, results chan<- string) {
-	wg := sync.WaitGroup{}
-
 	for ip := range jobs {
-		wg.Add(1)
 		go func(ip string) {
-			defer wg.Done()
 			scanner.isQuickLanUp(ip, 80, results)
 		}(ip)
 	}
-
-	wg.Wait()
 }
 
 func (scanner *Scanner) isQuickLanUp(ip string, port int, results chan<- string) {
