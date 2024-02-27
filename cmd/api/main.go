@@ -25,7 +25,7 @@ func main() {
 		log:     infoLog,
 		client:  &Client{port: cfg.port.client},
 		server:  &Server{port: cfg.port.server},
-		scanner: &Scanner{port: cfg.port.server, timeout: 1 * time.Second, log: infoLog, jobsBuffer: 2048},
+		scanner: &Scanner{port: cfg.port.server, timeout: 1 * time.Second, log: infoLog},
 	}
 
 	app.runScanner()

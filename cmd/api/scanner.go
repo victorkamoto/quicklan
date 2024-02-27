@@ -52,18 +52,21 @@ func (scanner *Scanner) scan(openHosts chan<- string) {
 func (scanner *Scanner) worker(jobs <-chan string, results chan<- string) {
 	for ip := range jobs {
 		go func(ip string) {
-			scanner.isQuickLanUp(ip, 80, results)
+			up := scanner.isQuickLanUp(ip)
+			if up {
+				results <- ip
+			}
 		}(ip)
 	}
 }
 
-func (scanner *Scanner) isQuickLanUp(ip string, port int, results chan<- string) {
-	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), scanner.timeout)
+func (scanner *Scanner) isQuickLanUp(ip string) bool {
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, 80), scanner.timeout)
 	if err != nil {
-		return
+		return false
 	}
 	defer conn.Close()
-	results <- ip
+	return true
 }
 
 func (scanner *Scanner) getLocalIpAndCIDR() (net.IP, string) {
