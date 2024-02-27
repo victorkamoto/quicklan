@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os/exec"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -30,8 +31,9 @@ func (scanner *Scanner) scan(openHosts chan<- string) {
 	scanner.log.Println("IP Range: ", len(ipRange))
 
 	jobs := make(chan string, scanner.jobsBuffer)
+	cores := runtime.NumCPU()
 
-	for range ipRange {
+	for range cores {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
