@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"sync"
 )
 
 type application struct {
@@ -29,12 +28,9 @@ type State struct {
 }
 
 func (app *application) runScanner() {
-	wg := sync.WaitGroup{}
 	openHosts := make(chan string, app.scanner.jobsBuffer)
 
-	wg.Add(1)
 	go func() {
-		defer wg.Done()
 		defer close(openHosts)
 		app.scanner.scan(openHosts)
 	}()
@@ -43,6 +39,4 @@ func (app *application) runScanner() {
 		app.log.Println("Host reachable:", ip)
 		app.state.Hosts = append(app.state.Hosts, ip)
 	}
-
-	wg.Wait()
 }

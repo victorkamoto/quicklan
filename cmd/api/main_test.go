@@ -17,7 +17,7 @@ func BenchmarkScanner(b *testing.B) {
 	app := &application{
 		state:   &State{},
 		log:     infoLog,
-		scanner: &Scanner{port: 5555, timeout: 1 * time.Second, log: infoLog, jobsBuffer: 2048},
+		scanner: &Scanner{port: 5555, timeout: 1 * time.Second, log: infoLog, jobsBuffer: 1024},
 	}
 	for n := 0; n < b.N; n++ {
 		app.runScanner()
