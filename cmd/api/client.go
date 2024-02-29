@@ -51,26 +51,17 @@ func (client *Client) sendFile(host string, path string) error {
 		}
 	}()
 
-	reader := bufio.NewReader(file)
-	buffer := make([]byte, 1024*1024*10) // 10MB
-
-	ext := filepath.Ext(path)
-	binary.Write(conn, binary.LittleEndian, int64(len(ext)))
-
-	data, err := io.CopyN(conn, bytes.NewReader([]byte(ext)), int64(len(ext)))
-	if err != nil {
-		return err
-	}
-	client.log.Printf("sent ext as %d bytes \n", data)
-
 	title := filepath.Base(path)
 	binary.Write(conn, binary.LittleEndian, int64(len(title)))
 
-	data, err = io.CopyN(conn, bytes.NewReader([]byte(title)), int64(len(title)))
+	data, err := io.CopyN(conn, bytes.NewReader([]byte(title)), int64(len(title)))
 	if err != nil {
 		return err
 	}
 	client.log.Printf("sent title as %d bytes \n", data)
+
+	reader := bufio.NewReader(file)
+	buffer := make([]byte, 1024*1024*10) // 10MB
 
 	for {
 		n, err := reader.Read(buffer)

@@ -29,9 +29,10 @@ func main() {
 	}
 
 	app.runScanner()
-
 	for _, ip := range app.state.Hosts {
 		app.log.Println("Saved host:", ip)
 	}
+
+	app.server.listen()
 
 }

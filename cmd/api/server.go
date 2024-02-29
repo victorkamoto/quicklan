@@ -36,23 +36,11 @@ func (server *Server) listen() {
 func (server *Server) handleClient(conn net.Conn) {
 	defer conn.Close()
 
-	var extLen int64
-	binary.Read(conn, binary.LittleEndian, &extLen)
-
-	extBuf := make([]byte, extLen)
-	_, err := io.ReadFull(conn, extBuf)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ext := string(extBuf)
-	server.log.Printf("received ext: %s \n", ext)
-
 	var titleLen int64
 	binary.Read(conn, binary.LittleEndian, &titleLen)
 
 	titleBuf := make([]byte, titleLen)
-	_, err = io.ReadFull(conn, titleBuf)
+	_, err := io.ReadFull(conn, titleBuf)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -77,8 +65,7 @@ func (server *Server) handleClient(conn net.Conn) {
 		server.log.Printf("received %d bytes \n", data)
 	}
 
-	fileName := fmt.Sprintf("%s%s", title, ext)
-	file, err := os.Create(fileName)
+	file, err := os.Create(title)
 	if err != nil {
 		log.Fatal(err)
 	}
