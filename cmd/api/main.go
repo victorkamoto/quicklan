@@ -33,6 +33,4 @@ func main() {
 		app.log.Println("Saved host:", ip)
 	}
 
-	app.server.listen()
-
 }
