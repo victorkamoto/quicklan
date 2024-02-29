@@ -33,4 +33,11 @@ func main() {
 		app.log.Println("Saved host:", ip)
 	}
 
+	// go func() {
+	// 	time.Sleep(5 * time.Second)
+
+	// 	app.client.sendFile("localhost", "../../../../../../Videos/Timber - A Chill Mix.mp4")
+	// }()
+
+	// app.server.listen()
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -48,12 +47,16 @@ func (server *Server) handleClient(conn net.Conn) {
 	title := string(titleBuf)
 	server.log.Printf("received title: %s \n", title)
 
-	buf := new(bytes.Buffer)
+	file, err := os.Create(title)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
 	for {
 		var size int64
 		binary.Read(conn, binary.LittleEndian, &size)
 
-		data, err := io.CopyN(buf, conn, size)
+		data, err := io.CopyN(file, conn, size)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -64,17 +67,5 @@ func (server *Server) handleClient(conn net.Conn) {
 
 		server.log.Printf("received %d bytes \n", data)
 	}
-
-	file, err := os.Create(title)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	_, err = file.Write(buf.Bytes())
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	server.log.Println("server done")
 }
