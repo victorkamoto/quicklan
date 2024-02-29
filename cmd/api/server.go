@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 )
 
 type Server struct {
@@ -35,6 +36,30 @@ func (server *Server) listen() {
 func (server *Server) handleClient(conn net.Conn) {
 	defer conn.Close()
 
+	var extLen int64
+	binary.Read(conn, binary.LittleEndian, &extLen)
+
+	extBuf := make([]byte, extLen)
+	_, err := io.ReadFull(conn, extBuf)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ext := string(extBuf)
+	server.log.Printf("received ext: %s \n", ext)
+
+	var titleLen int64
+	binary.Read(conn, binary.LittleEndian, &titleLen)
+
+	titleBuf := make([]byte, titleLen)
+	_, err = io.ReadFull(conn, titleBuf)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	title := string(titleBuf)
+	server.log.Printf("received title: %s \n", title)
+
 	buf := new(bytes.Buffer)
 	for {
 		var size int64
@@ -50,6 +75,18 @@ func (server *Server) handleClient(conn net.Conn) {
 		}
 
 		server.log.Printf("received %d bytes \n", data)
+	}
+
+	fileName := fmt.Sprintf("%s%s", title, ext)
+	file, err := os.Create(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	_, err = file.Write(buf.Bytes())
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	server.log.Println("server done")
