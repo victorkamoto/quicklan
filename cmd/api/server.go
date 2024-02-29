@@ -1,57 +1,56 @@
 package main
 
 import (
-	"bufio"
+	"bytes"
+	"encoding/binary"
 	"fmt"
+	"io"
+	"log"
 	"net"
-	"strconv"
-	"strings"
 )
 
 type Server struct {
 	port int
+	log  *log.Logger
 }
 
-var count = 0
-
-func (server *Server) connect() {
-	listener, err := net.Listen("tcp", fmt.Sprint("localhost:", server.port))
+func (server *Server) listen() {
+	ln, err := net.Listen("tcp", fmt.Sprint("localhost:", server.port))
 	if err != nil {
-		fmt.Println(err)
+		server.log.Fatal(err)
 		return
 	}
-	defer listener.Close()
-	fmt.Println("Listening on localhost:", server.port)
+	defer ln.Close()
 
 	for {
-		conn, err := listener.Accept()
+		conn, err := ln.Accept()
 		if err != nil {
-			fmt.Println(err)
-			continue
+			log.Fatal(err)
 		}
 
 		go server.handleClient(conn)
-		count++
 	}
 }
 
 func (server *Server) handleClient(conn net.Conn) {
-	fmt.Println("Connection ", count, " established")
+	defer conn.Close()
 
+	buf := new(bytes.Buffer)
 	for {
-		data, err := bufio.NewReader(conn).ReadString('\n')
+		var size int64
+		binary.Read(conn, binary.LittleEndian, &size)
+
+		data, err := io.CopyN(buf, conn, size)
 		if err != nil {
-			fmt.Println(err)
-			return
+			log.Fatal(err)
 		}
 
-		temp := strings.TrimSpace(string(data))
-		if temp == "STOP" {
+		if data == 0 {
 			break
 		}
-		fmt.Println(temp)
-		counter := strconv.Itoa(count) + "\n"
-		conn.Write([]byte(string(counter)))
+
+		server.log.Printf("received %d bytes \n", data)
 	}
-	conn.Close()
+
+	server.log.Println("server done")
 }
