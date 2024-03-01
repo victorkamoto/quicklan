@@ -6,6 +6,13 @@ import { UserNav } from "./components/user-account-nav";
 import { AvatarImage } from "@radix-ui/react-avatar";
 import { UserAvatar } from "./components/user-avatar";
 import { Icons } from "./components/icons";
+import {
+  MemoryRouter,
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 
 type User = {
   username: string;
@@ -14,7 +21,7 @@ type User = {
   ip: string;
 };
 function App() {
-  const [hosts, setHosts] = useState<string[]>([]);
+  const [hosts, setHosts] = useState<User[]>([]);
   const [scanDone, setScanDone] = useState<boolean>(false);
 
   useEffect(() => {
@@ -24,7 +31,13 @@ function App() {
     getHosts();
 
     EventsOn("host:up", (data: any) => {
-      setHosts([...hosts, data]);
+      let host = {
+        username: "vic",
+        host: "devpc",
+        avatar: "",
+        ip: data,
+      };
+      setHosts([...hosts, host]);
     });
     EventsOn("scan:done", (data: any) => {
       setScanDone(true);
@@ -73,14 +86,13 @@ function App() {
             </div>
           )}
         </div>
-        {/* <div className="min-h-[320px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
-          {hosts &&
-            hosts.map((host) => (
-              <Host username="vic" avatar="" host="devpc" ip={host} />
-            ))}
-        </div> */}
         <div className="min-h-[320px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
-          <HostView username="vic" avatar="" host="devpc" ip="10.15.0.200" />
+          <MemoryRouter>
+            <Routes>
+              <Route path="/" element={<Hosts hosts={hosts} />} />
+              <Route path="/view" element={<HostView />} />
+            </Routes>
+          </MemoryRouter>
         </div>
       </main>
       <footer className="min-h-[60px] border-t border-slate-200"></footer>
@@ -88,31 +100,46 @@ function App() {
   );
 }
 
-const Host = (user: User) => {
+const Hosts = ({ hosts }: { hosts: User[] }) => {
+  const navigate = useNavigate();
   return (
-    <div className="min-h-[70px] rounded-md flex border border-slate-300 cursor-pointer">
-      <div className="w-1/4 flex justify-center items-center">
-        <UserAvatar
-          user={{
-            username: user?.username ?? null,
-            avatar: user?.avatar ?? null,
+    <>
+      {hosts.map((host, index) => (
+        <div
+          className="min-h-[70px] rounded-md flex border border-slate-300 cursor-pointer"
+          onClick={(e) => {
+            e.preventDefault();
+            navigate("/view", {
+              state: { host: host },
+            });
           }}
-          className="h-10 w-10"
-        />
-      </div>
-      <div className="flex flex-col justify-center">
-        <p className="font-bold">{user.username}</p>
-        <div className="flex space-x-2">
-          <p className="font-sm">{user.host}</p>
-          <p>|</p>
-          <p className="font-sm">{user.ip}</p>
+        >
+          <div className="w-1/4 flex justify-center items-center">
+            <UserAvatar
+              user={{
+                username: host?.username ?? null,
+                avatar: host?.avatar ?? null,
+              }}
+              className="h-10 w-10"
+            />
+          </div>
+          <div className="flex flex-col justify-center">
+            <p className="font-bold">{host.username}</p>
+            <div className="flex space-x-2">
+              <p className="font-sm">{host.host}</p>
+              <p>|</p>
+              <p className="font-sm">{host.ip}</p>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      ))}
+    </>
   );
 };
 
-const HostView = (host: User) => {
+const HostView = () => {
+  const { state } = useLocation();
+  const host = state.host;
   return (
     <div className="min-h-[300px] rounded-md flex flex-col space-y-2">
       <div className="flex p-2 border border-slate-200 rounded-md cursor-default">
