@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -9,9 +10,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	wr "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type Scanner struct {
+	ctx        context.Context
 	port       int
 	cidr       string
 	jobsBuffer int
@@ -19,7 +23,7 @@ type Scanner struct {
 	log        *log.Logger
 }
 
-func (scanner *Scanner) scan(openHosts chan<- string) {
+func (scanner *Scanner) scan() {
 	wg := sync.WaitGroup{}
 
 	host, cidr := scanner.getLocalIpAndCIDR()
@@ -37,7 +41,7 @@ func (scanner *Scanner) scan(openHosts chan<- string) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			scanner.worker(jobs, openHosts)
+			scanner.worker(jobs)
 		}()
 	}
 
@@ -47,14 +51,16 @@ func (scanner *Scanner) scan(openHosts chan<- string) {
 	close(jobs)
 
 	wg.Wait()
+
+	wr.EventsEmit(scanner.ctx, "scan:done")
 }
 
-func (scanner *Scanner) worker(jobs <-chan string, results chan<- string) {
+func (scanner *Scanner) worker(jobs <-chan string) {
 	for ip := range jobs {
 		go func(ip string) {
 			up := scanner.isQuickLanUp(ip)
 			if up {
-				results <- ip
+				wr.EventsEmit(scanner.ctx, "host:up", ip)
 			}
 		}(ip)
 	}
