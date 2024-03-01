@@ -3,4 +3,5 @@ cpu.prof
 mem.prof
 trace.out
 frontend/node_modules
-build
+frontend/dist
+build/bin

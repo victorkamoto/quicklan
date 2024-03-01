@@ -73,11 +73,14 @@ function App() {
             </div>
           )}
         </div>
-        <div className="min-h-[320px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
+        {/* <div className="min-h-[320px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
           {hosts &&
             hosts.map((host) => (
               <Host username="vic" avatar="" host="devpc" ip={host} />
             ))}
+        </div> */}
+        <div className="min-h-[320px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
+          <HostView username="vic" avatar="" host="devpc" ip="10.15.0.200" />
         </div>
       </main>
       <footer className="min-h-[60px] border-t border-slate-200"></footer>
@@ -97,7 +100,7 @@ const Host = (user: User) => {
           className="h-10 w-10"
         />
       </div>
-      <div className="flex flex-col juctx context.Contextstify-center">
+      <div className="flex flex-col justify-center">
         <p className="font-bold">{user.username}</p>
         <div className="flex space-x-2">
           <p className="font-sm">{user.host}</p>
@@ -109,6 +112,37 @@ const Host = (user: User) => {
   );
 };
 
-const HostView = (host: User) => {};
+const HostView = (host: User) => {
+  return (
+    <div className="min-h-[300px] rounded-md flex flex-col space-y-2">
+      <div className="flex p-2 border border-slate-200 rounded-md cursor-default">
+        <div className="w-1/4 flex justify-center items-center">
+          <UserAvatar
+            user={{
+              username: host?.username ?? null,
+              avatar: host?.avatar ?? null,
+            }}
+            className="h-10 w-10"
+          />
+        </div>
+        <div className="flex flex-col justify-center">
+          <p className="font-bold">{host.username}</p>
+          <div className="flex space-x-2">
+            <p className="font-sm">{host.host}</p>
+            <p>|</p>
+            <p className="font-sm">{host.ip}</p>
+          </div>
+        </div>
+      </div>
+      <hr />
+      <div className="flex flex-col space-y-2">
+        <p className="text-sm pl-2">What do you want to do?</p>
+        <Button variant={"outline"} color="red">
+          <span className="text-md text-slate-900">Send a file</span>
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 export default App;
