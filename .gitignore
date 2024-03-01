@@ -2,3 +2,5 @@ api.test
 cpu.prof
 mem.prof
 trace.out
+frontend/node_modules
+build
