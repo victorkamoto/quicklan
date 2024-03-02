@@ -72,6 +72,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Hosts />} />
               <Route path="/host" element={<HostView />} />
+              <Route path="/host/queue" element={<HostViewQueue />} />
             </Routes>
           </MemoryRouter>
         </main>
@@ -113,7 +114,8 @@ const Hosts = () => {
             <Button
               size={"icon"}
               variant={"ghost"}
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
                 setScanDone(false);
                 setHosts([]);
                 RunScanner();
@@ -193,7 +195,7 @@ const pathBuilder = (path: string) => {
   if (chunks.length === 2) {
     return ["back"];
   } else {
-    return chunks.slice(1);
+    return chunks.slice(1, chunks.length - 1);
   }
 };
 
@@ -206,13 +208,12 @@ const HostView = () => {
   const handleOpenFile = async () => {
     const file = await OpenFilesDialog();
     setSelected(file);
-    // send to host
     await SendFileToServer(host.ip, file);
   };
   return (
     <>
       <div className="min-h-75px px-2 flex justify-between items-center">
-        <div>
+        <div className="flex space-x-1">
           {tree.map((path, index) => (
             <div
               className="flex space-x-1 cursor-pointer hover:bg-slate-200 rounded-md w-16 p-1"
@@ -220,7 +221,9 @@ const HostView = () => {
               onClick={(e) => {
                 e.preventDefault();
                 if (path === "back") {
-                  navigate(-1);
+                  if (state.from === "/host/queue") {
+                    navigate("/");
+                  } else navigate(-1);
                 }
               }}
             >
@@ -236,24 +239,38 @@ const HostView = () => {
         ></Button>
       </div>
       <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
-        <div className="flex p-2 border border-slate-200 rounded-md cursor-default">
-          <div className="w-1/4 flex justify-center items-center">
-            <UserAvatar
-              user={{
-                username: host?.username ?? null,
-                avatar: host?.avatar ?? null,
-              }}
-              className="h-10 w-10"
-            />
-          </div>
-          <div className="flex flex-col justify-center">
-            <p className="font-bold">{host.username}</p>
-            <div className="flex space-x-2">
-              <p className="font-sm">{host.host}</p>
-              <p>|</p>
-              <p className="font-sm">{host.ip}</p>
+        <div className="flex p-2 border border-slate-200 rounded-md cursor-default justify-between items-center">
+          <div className="flex space-x-4 p-1">
+            <div className="w-1/4 flex justify-center items-center">
+              <UserAvatar
+                user={{
+                  username: host?.username ?? null,
+                  avatar: host?.avatar ?? null,
+                }}
+                className="h-10 w-10"
+              />
+            </div>
+            <div className="flex flex-col justify-center">
+              <p className="font-bold">{host.username}</p>
+              <div className="flex space-x-2">
+                <p className="font-sm">{host.host}</p>
+                <p>|</p>
+                <p className="font-sm">{host.ip}</p>
+              </div>
             </div>
           </div>
+          <Button
+            size={"icon"}
+            variant={"ghost"}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/host/queue", {
+                state: { host: host },
+              });
+            }}
+          >
+            <Icons.queue className="w-4 h-5" />
+          </Button>
         </div>
         <hr />
         <div className="flex flex-col space-y-2">
@@ -262,6 +279,50 @@ const HostView = () => {
             <span className="text-md text-slate-900">Send a file</span>
           </Button>
         </div>
+      </div>
+    </>
+  );
+};
+
+const HostViewQueue = () => {
+  const navigate = useNavigate();
+  const { state, pathname } = useLocation();
+  const host = state.host;
+  const tree = pathBuilder(pathname);
+
+  return (
+    <>
+      <div className="min-h-75px px-2 flex justify-between items-center">
+        <div>
+          {tree.map((path, index) => (
+            <div
+              className="flex space-x-1 cursor-pointer hover:bg-slate-200 rounded-md w-16 p-1"
+              key={index}
+              onClick={(e) => {
+                e.preventDefault();
+                if (path === "host") {
+                  navigate("/host", {
+                    state: { host: host, from: "/host/queue" },
+                  });
+                }
+              }}
+            >
+              <Icons.chevronLeft className="w-4 h-5" />
+              <span className="text-sm text-slate-600">{path}</span>
+            </div>
+          ))}
+        </div>
+        <Button
+          size={"icon"}
+          variant={"ghost"}
+          className="hover:bg-transparent hover:text-current cursor-default"
+        ></Button>
+      </div>
+      <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
+        <div className="flex flex-col space-y-2">
+          <p className="text-sm pl-2">Your queue</p>
+        </div>
+        <hr />
       </div>
     </>
   );

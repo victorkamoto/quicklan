@@ -81,6 +81,8 @@ func (app *App) appSetup() {
 	app.client = &Client{port: cfg.port.client, log: infoLog}
 	app.server = &Server{port: cfg.port.server, log: infoLog}
 	app.scanner = &Scanner{ctx: app.ctx, port: cfg.port.server, timeout: 1 * time.Second, log: infoLog, jobsBuffer: 1024}
+
+	go app.server.listen()
 }
 
 func (app *App) RunScanner() {
@@ -101,5 +103,7 @@ func (app *App) OpenFilesDialog() string {
 }
 
 func (app *App) SendFileToServer(host string, file string) {
-	go app.client.sendFile(host, file)
+	// go app.client.sendFile(host, file)
+
+	go app.client.sendFile("localhost", file)
 }

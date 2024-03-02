@@ -5,6 +5,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  ListStart,
   Loader2,
   RotateCcw,
 } from "lucide-react";
@@ -12,6 +13,7 @@ import { type JSX, type SVGProps } from "react";
 
 export const Icons = {
   close: Cross1Icon,
+  queue: ListStart,
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   spinner: Loader2,
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
