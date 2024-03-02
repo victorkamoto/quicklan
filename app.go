@@ -99,3 +99,7 @@ func (app *App) OpenFilesDialog() string {
 	}
 	return selection
 }
+
+func (app *App) SendFileToServer(host string, file string) {
+	go app.client.sendFile(host, file)
+}

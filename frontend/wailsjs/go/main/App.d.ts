@@ -6,3 +6,5 @@ export function GetLocalDetails():Promise<{[key: string]: string}>;
 export function OpenFilesDialog():Promise<string>;
 
 export function RunScanner():Promise<void>;
+
+export function SendFileToServer(arg1:string,arg2:string):Promise<void>;

@@ -3,6 +3,7 @@ import {
   GetLocalDetails,
   OpenFilesDialog,
   RunScanner,
+  SendFileToServer,
 } from "../wailsjs/go/main/App";
 import { EventsOn, LogInfo } from "../wailsjs/runtime/runtime";
 import { Button } from "./components/ui/button";
@@ -205,6 +206,8 @@ const HostView = () => {
   const handleOpenFile = async () => {
     const file = await OpenFilesDialog();
     setSelected(file);
+    // send to host
+    await SendFileToServer(host.ip, file);
   };
   return (
     <>

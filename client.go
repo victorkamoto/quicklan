@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Client struct {
@@ -20,16 +21,16 @@ type Client struct {
 func (client *Client) sendFile(host string, path string) error {
 	conn, err := net.Dial("tcp", fmt.Sprint(host, ":", client.port))
 	if err != nil {
+		fmt.Println("Error dialing:", err)
 		return err
 	}
 
-	fileInfo, err := os.Stat(path)
+	root := filepath.Dir(path)
+	target := filepath.Base(path)
+
+	fileInfo, err := client.walkDir(root, target)
 	if err != nil {
-		if os.IsNotExist(err) {
-			fmt.Println("File does not exist:", path)
-		} else {
-			fmt.Println("Error:", err)
-		}
+		client.log.Println("Error:", err)
 		return err
 	}
 
@@ -42,6 +43,7 @@ func (client *Client) sendFile(host string, path string) error {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defer func() {
 		if err = file.Close(); err != nil {
 			log.Fatal(err)
@@ -51,10 +53,9 @@ func (client *Client) sendFile(host string, path string) error {
 		}
 	}()
 
-	title := filepath.Base(path)
-	binary.Write(conn, binary.LittleEndian, int64(len(title)))
+	binary.Write(conn, binary.LittleEndian, int64(len(target)))
 
-	data, err := io.CopyN(conn, bytes.NewReader([]byte(title)), int64(len(title)))
+	data, err := io.CopyN(conn, bytes.NewReader([]byte(target)), int64(len(target)))
 	if err != nil {
 		return err
 	}
@@ -85,4 +86,26 @@ func (client *Client) sendFile(host string, path string) error {
 	}
 
 	return nil
+}
+
+func (client *Client) walkDir(root string, target string) (os.FileInfo, error) {
+	var fileInfo os.FileInfo
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() && strings.Contains(info.Name(), target) {
+			fmt.Println("Found file:", path)
+			fileInfo = info
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return fileInfo, nil
 }
