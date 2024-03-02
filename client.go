@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -11,9 +12,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	wr "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type Client struct {
+	ctx  context.Context
 	port int
 	log  *log.Logger
 }
@@ -64,6 +68,8 @@ func (client *Client) sendFile(host string, path string) error {
 	reader := bufio.NewReader(file)
 	buffer := make([]byte, 1024*1024*10) // 10MB
 
+	var bytesSent int64
+
 	for {
 		n, err := reader.Read(buffer)
 		if err != nil && err != io.EOF {
@@ -82,7 +88,14 @@ func (client *Client) sendFile(host string, path string) error {
 			return err
 		}
 
+		bytesSent += int64(data)
 		client.log.Printf("sent %d bytes \n", data)
+		progress := map[string]interface{}{
+			"sent":       bytesSent,
+			"total":      fileInfo.Size(),
+			"percentage": (bytesSent / fileInfo.Size()) * 100,
+		}
+		wr.EventsEmit(client.ctx, "file:progress", progress)
 	}
 
 	return nil

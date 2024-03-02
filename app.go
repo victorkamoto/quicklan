@@ -78,7 +78,7 @@ func (app *App) appSetup() {
 
 	app.config = cfg
 	app.log = infoLog
-	app.client = &Client{port: cfg.port.client, log: infoLog}
+	app.client = &Client{ctx: app.ctx, port: cfg.port.client, log: infoLog}
 	app.server = &Server{port: cfg.port.server, log: infoLog}
 	app.scanner = &Scanner{ctx: app.ctx, port: cfg.port.server, timeout: 1 * time.Second, log: infoLog, jobsBuffer: 1024}
 

@@ -19,6 +19,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import { Provider, atom, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { Progress } from "./components/ui/progress";
 
 export type Host = {
   username?: string | null;
@@ -29,17 +30,28 @@ export type Host = {
   ip: string | null;
 };
 
+type Progress = {
+  sent: number;
+  total: number;
+  percentage: number;
+};
+
 const hostsAtom = atom<Host[]>([]);
 const scanDoneAtom = atom<boolean>(false);
 const hostAtom = atom<Host | null>(null);
 const selectedFile = atom<string | null>(null);
+const progressAtom = atom<Progress | null>(null);
 
 function App() {
   const [host, setHost] = useAtom(hostAtom);
+  const setProgress = useSetAtom(progressAtom);
 
   useEffect(() => {
     EventsOn("local:ip", (data: any) => {
       setHost((host) => ({ ...host, ip: data }));
+    });
+    EventsOn("file:progress", (data: any) => {
+      setProgress(data);
     });
     const getLocalDetails = async () => {
       const details = await GetLocalDetails();
@@ -72,7 +84,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Hosts />} />
               <Route path="/host" element={<HostView />} />
-              <Route path="/host/queue" element={<HostViewQueue />} />
+              <Route path="/queue" element={<HostViewQueue />} />
             </Routes>
           </MemoryRouter>
         </main>
@@ -111,21 +123,33 @@ const Hosts = () => {
               <span className="text-sm text-slate-600">Finished scan</span>
               <Icons.check className="w-4 h-5 text-green-600" />
             </div>
-            <Button
-              size={"icon"}
-              variant={"outline"}
-              onClick={(e) => {
-                e.preventDefault();
-                setScanDone(false);
-                setHosts([]);
-                RunScanner();
-              }}
-            >
-              <Icons.refresh className="w-4 h-5" />
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                size={"icon"}
+                variant={"outline"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setScanDone(false);
+                  setHosts([]);
+                  RunScanner();
+                }}
+              >
+                <Icons.refresh className="w-4 h-5" />
+              </Button>
+              <Button
+                size={"icon"}
+                variant={"outline"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/queue");
+                }}
+              >
+                <Icons.queue className="w-4 h-5" />
+              </Button>
+            </div>
           </div>
         ) : (
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center px-2">
             <div className="flex space-x-2 cursor-default">
               <span className="text-sm text-slate-600">Scanning</span>
               <svg
@@ -147,10 +171,13 @@ const Hosts = () => {
             </div>
             <Button
               size={"icon"}
-              variant={"ghost"}
-              className="hover:bg-transparent hover:text-current cursor-default"
+              variant={"outline"}
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/queue");
+              }}
             >
-              {/* <Icons.stop className="w-4 h-5" /> */}
+              <Icons.queue className="w-4 h-5" />
             </Button>
           </div>
         )}
@@ -208,7 +235,10 @@ const HostView = () => {
   const handleOpenFile = async () => {
     const file = await OpenFilesDialog();
     setSelected(file);
-    await SendFileToServer(host.ip, file);
+    SendFileToServer(host.ip, file);
+    navigate("/queue", {
+      state: { from: pathname },
+    });
   };
   return (
     <>
@@ -221,9 +251,7 @@ const HostView = () => {
               onClick={(e) => {
                 e.preventDefault();
                 if (path === "back") {
-                  if (state.from === "/host/queue") {
-                    navigate("/");
-                  } else navigate(-1);
+                  navigate(-1);
                 }
               }}
             >
@@ -259,18 +287,6 @@ const HostView = () => {
               </div>
             </div>
           </div>
-          <Button
-            size={"icon"}
-            variant={"outline"}
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("/host/queue", {
-                state: { host: host },
-              });
-            }}
-          >
-            <Icons.queue className="w-4 h-5" />
-          </Button>
         </div>
         <hr />
         <div className="flex flex-col space-y-2">
@@ -286,8 +302,7 @@ const HostView = () => {
 
 const HostViewQueue = () => {
   const navigate = useNavigate();
-  const { state, pathname } = useLocation();
-  const host = state.host;
+  const { pathname } = useLocation();
   const tree = pathBuilder(pathname);
 
   return (
@@ -300,10 +315,8 @@ const HostViewQueue = () => {
               key={index}
               onClick={(e) => {
                 e.preventDefault();
-                if (path === "host") {
-                  navigate("/host", {
-                    state: { host: host, from: "/host/queue" },
-                  });
+                if (path === "back") {
+                  navigate(-1);
                 }
               }}
             >

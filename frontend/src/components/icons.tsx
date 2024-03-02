@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ListStart,
   Loader2,
+  Minimize2,
   RotateCcw,
 } from "lucide-react";
 import { type JSX, type SVGProps } from "react";
@@ -16,6 +17,8 @@ export const Icons = {
   queue: ListStart,
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   spinner: Loader2,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  minimize: Minimize2,
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   chevronLeft: ChevronLeft,
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
