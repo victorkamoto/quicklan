@@ -107,13 +107,13 @@ const Hosts = () => {
       <div className="min-h-75px px-2">
         {scanDone ? (
           <div className="flex justify-between items-center px-2">
-            <div className="flex space-x-1">
+            <div className="flex space-x-1 cursor-default">
               <span className="text-sm text-slate-600">Finished scan</span>
               <Icons.check className="w-4 h-5 text-green-600" />
             </div>
             <Button
               size={"icon"}
-              variant={"ghost"}
+              variant={"outline"}
               onClick={(e) => {
                 e.preventDefault();
                 setScanDone(false);
@@ -126,7 +126,7 @@ const Hosts = () => {
           </div>
         ) : (
           <div className="flex justify-between items-center">
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 cursor-default">
               <span className="text-sm text-slate-600">Scanning</span>
               <svg
                 aria-hidden="true"
@@ -158,7 +158,7 @@ const Hosts = () => {
       <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200 overflow-y-auto">
         {hosts.map((host, index) => (
           <div
-            className="min-h-[70px] rounded-md flex border border-slate-300 cursor-pointer"
+            className="min-h-[70px] rounded-md flex cursor-pointer hover:bg-slate-100 border border-slate-100"
             onClick={(e) => {
               e.preventDefault();
               navigate("/host", {
@@ -239,7 +239,7 @@ const HostView = () => {
         ></Button>
       </div>
       <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
-        <div className="flex p-2 border border-slate-200 rounded-md cursor-default justify-between items-center">
+        <div className="flex p-2 px-3 cursor-default justify-between items-center">
           <div className="flex space-x-4 p-1">
             <div className="w-1/4 flex justify-center items-center">
               <UserAvatar
@@ -261,7 +261,7 @@ const HostView = () => {
           </div>
           <Button
             size={"icon"}
-            variant={"ghost"}
+            variant={"outline"}
             onClick={(e) => {
               e.preventDefault();
               navigate("/host/queue", {
@@ -275,7 +275,7 @@ const HostView = () => {
         <hr />
         <div className="flex flex-col space-y-2">
           <p className="text-sm pl-2">What do you want to do?</p>
-          <Button variant={"outline"} color="red" onClick={handleOpenFile}>
+          <Button variant={"outline"} onClick={handleOpenFile}>
             <span className="text-md text-slate-900">Send a file</span>
           </Button>
         </div>
