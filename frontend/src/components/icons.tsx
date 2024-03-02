@@ -1,5 +1,13 @@
 import { Cross1Icon } from "@radix-ui/react-icons";
-import { ArrowRight, Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import {
+  ArrowRight,
+  Ban,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  RotateCcw,
+} from "lucide-react";
 import { type JSX, type SVGProps } from "react";
 
 export const Icons = {
@@ -11,8 +19,12 @@ export const Icons = {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   chevronRight: ChevronRight,
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  stop: Ban,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  refresh: RotateCcw,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   arrowRight: ArrowRight,
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   check: Check,
   hamburger: () => (
     <svg
