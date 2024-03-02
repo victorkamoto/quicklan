@@ -13,9 +13,10 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-import { atom, useAtom } from "jotai";
+import { Provider, atom, useAtom } from "jotai";
 
 const hostsAtom = atom<User[]>([]);
+const scanDoneAtom = atom<boolean>(false);
 
 type User = {
   username: string;
@@ -31,36 +32,38 @@ function App() {
     getHosts();
   }, []);
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="bg-background border-b border-slate-200">
-        <div className="container flex h-16 items-center justify-between py-4">
-          <nav></nav>
-          <UserNav
-            user={{
-              username: "Vic",
-              avatar: "",
-              ip: "10.15.0.200",
-            }}
-          />
-        </div>
-      </header>
-      <main className="min-h-[375px] p-3 flex flex-col">
-        <MemoryRouter>
-          <Routes>
-            <Route path="/" element={<Hosts />} />
-            <Route path="/host" element={<HostView />} />
-          </Routes>
-        </MemoryRouter>
-      </main>
-      <footer className="min-h-[60px] border-t border-slate-200"></footer>
-    </div>
+    <Provider>
+      <div className="flex min-h-screen flex-col">
+        <header className="bg-background border-b border-slate-200">
+          <div className="container flex h-16 items-center justify-between py-4">
+            <nav></nav>
+            <UserNav
+              user={{
+                username: "Vic",
+                avatar: "",
+                ip: "10.15.0.200",
+              }}
+            />
+          </div>
+        </header>
+        <main className="min-h-[375px] p-2 flex flex-col">
+          <MemoryRouter>
+            <Routes>
+              <Route path="/" element={<Hosts />} />
+              <Route path="/host" element={<HostView />} />
+            </Routes>
+          </MemoryRouter>
+        </main>
+        <footer className="min-h-[60px] border-t border-slate-200"></footer>
+      </div>
+    </Provider>
   );
 }
 
 const Hosts = () => {
   const navigate = useNavigate();
   const [hosts, setHosts] = useAtom(hostsAtom);
-  const [scanDone, setScanDone] = useState(false);
+  const [scanDone, setScanDone] = useAtom(scanDoneAtom);
 
   useEffect(() => {
     EventsOn("host:up", (data: any) => {
@@ -70,8 +73,7 @@ const Hosts = () => {
         avatar: "",
         ip: data,
       };
-      let exists = hosts.find((h) => h.ip === data);
-      !exists && setHosts((hosts) => [...hosts, host]);
+      setHosts((hosts) => [...hosts, host]);
     });
     EventsOn("scan:done", (data: any) => {
       setScanDone(true);
@@ -123,14 +125,14 @@ const Hosts = () => {
             <Button
               size={"icon"}
               variant={"ghost"}
-              className="hover:bg-transparent hover:text-current"
+              className="hover:bg-transparent hover:text-current cursor-default"
             >
               {/* <Icons.stop className="w-4 h-5" /> */}
             </Button>
           </div>
         )}
       </div>
-      <div className="min-h-[300px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
+      <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200 overflow-y-auto">
         {hosts.map((host, index) => (
           <div
             className="min-h-[70px] rounded-md flex border border-slate-300 cursor-pointer"
@@ -181,51 +183,56 @@ const HostView = () => {
   const tree = pathBuilder(pathname);
   return (
     <>
-      <div className="min-h-75px px-2">
-        {tree.map((path, index) => (
-          <div
-            className="flex space-x-1 cursor-pointer hover:bg-slate-200 rounded-md w-14"
-            key={index}
-            onClick={(e) => {
-              e.preventDefault();
-              if (path === "back") {
-                navigate(-1);
-              }
-            }}
-          >
-            <Icons.chevronLeft className="w-4 h-5" />
-            <span className="text-sm text-slate-600">{path}</span>
-          </div>
-        ))}
+      <div className="min-h-75px px-2 flex justify-between">
+        <div>
+          {tree.map((path, index) => (
+            <div
+              className="flex space-x-1 cursor-pointer hover:bg-slate-200 rounded-md w-14 p-1"
+              key={index}
+              onClick={(e) => {
+                e.preventDefault();
+                if (path === "back") {
+                  navigate(-1);
+                }
+              }}
+            >
+              <Icons.chevronLeft className="w-4 h-5" />
+              <span className="text-sm text-slate-600">{path}</span>
+            </div>
+          ))}
+        </div>
+        <Button
+          size={"icon"}
+          variant={"ghost"}
+          className="hover:bg-transparent hover:text-current cursor-default"
+        ></Button>
       </div>
-      <div className="min-h-[300px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
-        <div className="min-h-[300px] rounded-md flex flex-col space-y-2">
-          <div className="flex p-2 border border-slate-200 rounded-md cursor-default">
-            <div className="w-1/4 flex justify-center items-center">
-              <UserAvatar
-                user={{
-                  username: host?.username ?? null,
-                  avatar: host?.avatar ?? null,
-                }}
-                className="h-10 w-10"
-              />
-            </div>
-            <div className="flex flex-col justify-center">
-              <p className="font-bold">{host.username}</p>
-              <div className="flex space-x-2">
-                <p className="font-sm">{host.host}</p>
-                <p>|</p>
-                <p className="font-sm">{host.ip}</p>
-              </div>
+      <div className="min-h-[310px] max-h-[310-px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
+        <div className="flex p-2 border border-slate-200 rounded-md cursor-default">
+          <div className="w-1/4 flex justify-center items-center">
+            <UserAvatar
+              user={{
+                username: host?.username ?? null,
+                avatar: host?.avatar ?? null,
+              }}
+              className="h-10 w-10"
+            />
+          </div>
+          <div className="flex flex-col justify-center">
+            <p className="font-bold">{host.username}</p>
+            <div className="flex space-x-2">
+              <p className="font-sm">{host.host}</p>
+              <p>|</p>
+              <p className="font-sm">{host.ip}</p>
             </div>
           </div>
-          <hr />
-          <div className="flex flex-col space-y-2">
-            <p className="text-sm pl-2">What do you want to do?</p>
-            <Button variant={"outline"} color="red">
-              <span className="text-md text-slate-900">Send a file</span>
-            </Button>
-          </div>
+        </div>
+        <hr />
+        <div className="flex flex-col space-y-2">
+          <p className="text-sm pl-2">What do you want to do?</p>
+          <Button variant={"outline"} color="red">
+            <span className="text-md text-slate-900">Send a file</span>
+          </Button>
         </div>
       </div>
     </>

@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Icons } from "./icons";
 
 type User = {
-  username: string;
+  username: string | null;
   avatar: string | null;
 };
 interface UserAvatarProps extends AvatarProps {
