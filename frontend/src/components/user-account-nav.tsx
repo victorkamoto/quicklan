@@ -1,5 +1,6 @@
 "use client";
 
+import { Host } from "../App";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,15 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { UserAvatar } from "./user-avatar";
-
-type User = {
-  username: string;
-  avatar: string;
-  ip: string;
-};
-
 interface UserNavProps extends React.HTMLAttributes<HTMLDivElement> {
-  user: User;
+  user: Host;
 }
 
 export function UserNav({ user }: UserNavProps) {

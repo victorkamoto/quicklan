@@ -31,6 +31,8 @@ func (scanner *Scanner) scan() {
 	scanner.log.Println("CIDR: ", cidr)
 	scanner.cidr = cidr
 
+	wr.EventsEmit(scanner.ctx, "local:ip", host.String())
+
 	ipRange := scanner.generateIPRange()
 	scanner.log.Println("IP Range: ", len(ipRange))
 

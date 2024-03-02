@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Greet, RunScanner } from "../wailsjs/go/main/App";
+import { useEffect } from "react";
+import { GetLocalDetails, RunScanner } from "../wailsjs/go/main/App";
 import { EventsOn, LogInfo } from "../wailsjs/runtime/runtime";
 import { Button } from "./components/ui/button";
 import { UserNav } from "./components/user-account-nav";
@@ -13,24 +13,39 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-import { Provider, atom, useAtom } from "jotai";
+import { Provider, atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 
-const hostsAtom = atom<User[]>([]);
-const scanDoneAtom = atom<boolean>(false);
-
-type User = {
-  username: string;
-  host: string | null;
-  avatar: string | null;
-  ip: string;
+export type Host = {
+  username?: string | null;
+  name?: string | null;
+  homeDir?: string | null;
+  host?: string | null;
+  avatar?: string | null;
+  ip: string | null;
 };
+
+const hostsAtom = atom<Host[]>([]);
+const scanDoneAtom = atom<boolean>(false);
+const hostAtom = atom<Host | null>(null);
+
 function App() {
+  const [host, setHost] = useAtom(hostAtom);
+
   useEffect(() => {
+    EventsOn("local:ip", (data: any) => {
+      setHost((host) => ({ ...host, ip: data }));
+    });
+    const getLocalDetails = async () => {
+      const details = await GetLocalDetails();
+      setHost(details as Host);
+    };
     const getHosts = async () => {
       await RunScanner();
     };
+    getLocalDetails();
     getHosts();
   }, []);
+
   return (
     <Provider>
       <div className="flex min-h-screen flex-col">
@@ -39,14 +54,14 @@ function App() {
             <nav></nav>
             <UserNav
               user={{
-                username: "Vic",
+                username: host?.username ?? "",
                 avatar: "",
-                ip: "10.15.0.200",
+                ip: host?.ip ?? "",
               }}
             />
           </div>
         </header>
-        <main className="min-h-[375px] p-2 flex flex-col">
+        <main className="min-h-[375px] p-2 flex flex-col px-4">
           <MemoryRouter>
             <Routes>
               <Route path="/" element={<Hosts />} />
@@ -67,7 +82,7 @@ const Hosts = () => {
 
   useEffect(() => {
     EventsOn("host:up", (data: any) => {
-      let host: User = {
+      let host: Host = {
         username: "vic",
         host: "devpc",
         avatar: "",
@@ -84,7 +99,7 @@ const Hosts = () => {
     <>
       <div className="min-h-75px px-2">
         {scanDone ? (
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center px-2">
             <div className="flex space-x-1">
               <span className="text-sm text-slate-600">Finished scan</span>
               <Icons.check className="w-4 h-5 text-green-600" />
@@ -183,11 +198,11 @@ const HostView = () => {
   const tree = pathBuilder(pathname);
   return (
     <>
-      <div className="min-h-75px px-2 flex justify-between">
+      <div className="min-h-75px px-2 flex justify-between items-center">
         <div>
           {tree.map((path, index) => (
             <div
-              className="flex space-x-1 cursor-pointer hover:bg-slate-200 rounded-md w-14 p-1"
+              className="flex space-x-1 cursor-pointer hover:bg-slate-200 rounded-md w-16 p-1"
               key={index}
               onClick={(e) => {
                 e.preventDefault();
@@ -207,7 +222,7 @@ const HostView = () => {
           className="hover:bg-transparent hover:text-current cursor-default"
         ></Button>
       </div>
-      <div className="min-h-[310px] max-h-[310-px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
+      <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
         <div className="flex p-2 border border-slate-200 rounded-md cursor-default">
           <div className="w-1/4 flex justify-center items-center">
             <UserAvatar

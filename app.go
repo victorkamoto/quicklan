@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log"
 	"os"
+	"os/user"
+	"runtime"
 	"time"
 )
 
@@ -42,6 +43,29 @@ func (app *App) startup(ctx context.Context) {
 
 	go app.appSetup()
 }
+func (app *App) GetLocalDetails() map[string]string {
+	hostname, err := os.Hostname()
+	if err != nil {
+		app.log.Println("Error getting hostname")
+	}
+
+	user, err := user.Current()
+	if err != nil {
+		app.log.Println("Error getting user details")
+	}
+
+	env := runtime.GOOS
+
+	details := map[string]string{
+		"hostname": hostname,
+		"username": user.Username,
+		"name":     user.Name,
+		"homeDir":  user.HomeDir,
+		"os":       env,
+	}
+
+	return details
+}
 
 func (app *App) appSetup() {
 	var cfg config
@@ -59,15 +83,6 @@ func (app *App) appSetup() {
 	app.scanner = &Scanner{ctx: app.ctx, port: cfg.port.server, timeout: 1 * time.Second, log: infoLog, jobsBuffer: 1024}
 }
 
-// Greet returns a greeting for the given name
-func (app *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
-}
-
 func (app *App) RunScanner() {
-
-	go func() {
-		app.scanner.scan()
-	}()
-
+	go app.scanner.scan()
 }
