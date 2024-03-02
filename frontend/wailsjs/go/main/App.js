@@ -6,6 +6,10 @@ export function GetLocalDetails() {
   return window['go']['main']['App']['GetLocalDetails']();
 }
 
+export function OpenFilesDialog() {
+  return window['go']['main']['App']['OpenFilesDialog']();
+}
+
 export function RunScanner() {
   return window['go']['main']['App']['RunScanner']();
 }

@@ -1,5 +1,9 @@
 import { useEffect } from "react";
-import { GetLocalDetails, RunScanner } from "../wailsjs/go/main/App";
+import {
+  GetLocalDetails,
+  OpenFilesDialog,
+  RunScanner,
+} from "../wailsjs/go/main/App";
 import { EventsOn, LogInfo } from "../wailsjs/runtime/runtime";
 import { Button } from "./components/ui/button";
 import { UserNav } from "./components/user-account-nav";
@@ -27,6 +31,7 @@ export type Host = {
 const hostsAtom = atom<Host[]>([]);
 const scanDoneAtom = atom<boolean>(false);
 const hostAtom = atom<Host | null>(null);
+const selectedFile = atom<string | null>(null);
 
 function App() {
   const [host, setHost] = useAtom(hostAtom);
@@ -192,10 +197,15 @@ const pathBuilder = (path: string) => {
 };
 
 const HostView = () => {
+  const setSelected = useSetAtom(selectedFile);
   const navigate = useNavigate();
   const { state, pathname } = useLocation();
   const host = state.host;
   const tree = pathBuilder(pathname);
+  const handleOpenFile = async () => {
+    const file = await OpenFilesDialog();
+    setSelected(file);
+  };
   return (
     <>
       <div className="min-h-75px px-2 flex justify-between items-center">
@@ -245,7 +255,7 @@ const HostView = () => {
         <hr />
         <div className="flex flex-col space-y-2">
           <p className="text-sm pl-2">What do you want to do?</p>
-          <Button variant={"outline"} color="red">
+          <Button variant={"outline"} color="red" onClick={handleOpenFile}>
             <span className="text-md text-slate-900">Send a file</span>
           </Button>
         </div>

@@ -3,4 +3,6 @@
 
 export function GetLocalDetails():Promise<{[key: string]: string}>;
 
+export function OpenFilesDialog():Promise<string>;
+
 export function RunScanner():Promise<void>;

@@ -3,24 +3,24 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/user"
 	"runtime"
 	"time"
+
+	wr "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-// App struct
 type App struct {
-	ctx context.Context
-
+	ctx     context.Context
 	config  config
 	client  *Client
 	server  *Server
 	scanner *Scanner
 	log     *log.Logger
 }
-
 type config struct {
 	port Port
 	env  string
@@ -85,4 +85,17 @@ func (app *App) appSetup() {
 
 func (app *App) RunScanner() {
 	go app.scanner.scan()
+}
+
+func (app *App) OpenFilesDialog() string {
+	opts := wr.OpenDialogOptions{Title: "Select File"}
+	selection, err := wr.OpenFileDialog(app.ctx, opts)
+	if err != nil {
+		wr.LogError(app.ctx, "Error opening dialog")
+	}
+	wr.LogInfo(app.ctx, "File Selected:"+fmt.Sprint(selection))
+	if len(selection) == 0 {
+		wr.LogError(app.ctx, "No files selected")
+	}
+	return selection
 }
