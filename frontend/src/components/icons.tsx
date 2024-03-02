@@ -1,5 +1,5 @@
 import { Cross1Icon } from "@radix-ui/react-icons";
-import { ArrowRight, Check, ChevronLeft, Loader2 } from "lucide-react";
+import { ArrowRight, Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { type JSX, type SVGProps } from "react";
 
 export const Icons = {
@@ -8,6 +8,8 @@ export const Icons = {
   spinner: Loader2,
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   chevronLeft: ChevronLeft,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  chevronRight: ChevronRight,
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   arrowRight: ArrowRight,
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
