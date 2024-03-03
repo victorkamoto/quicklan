@@ -102,8 +102,8 @@ func (app *App) OpenFilesDialog() string {
 	return selection
 }
 
-func (app *App) SendFileToServer(host string, file string) {
+func (app *App) SendFileToServer(jobId string, host string, file string) {
 	// go app.client.sendFile(host, file)
 
-	go app.client.sendFile("localhost", file)
+	go app.client.sendFile(jobId, "localhost", file)
 }

@@ -7,4 +7,4 @@ export function OpenFilesDialog():Promise<string>;
 
 export function RunScanner():Promise<void>;
 
-export function SendFileToServer(arg1:string,arg2:string):Promise<void>;
+export function SendFileToServer(arg1:string,arg2:string,arg3:string):Promise<void>;

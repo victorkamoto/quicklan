@@ -14,6 +14,6 @@ export function RunScanner() {
   return window['go']['main']['App']['RunScanner']();
 }
 
-export function SendFileToServer(arg1, arg2) {
-  return window['go']['main']['App']['SendFileToServer'](arg1, arg2);
+export function SendFileToServer(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SendFileToServer'](arg1, arg2, arg3);
 }

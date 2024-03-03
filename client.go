@@ -22,7 +22,7 @@ type Client struct {
 	log  *log.Logger
 }
 
-func (client *Client) sendFile(host string, path string) error {
+func (client *Client) sendFile(jobId string, host string, path string) error {
 	conn, err := net.Dial("tcp", fmt.Sprint(host, ":", client.port))
 	if err != nil {
 		fmt.Println("Error dialing:", err)
@@ -90,12 +90,13 @@ func (client *Client) sendFile(host string, path string) error {
 
 		bytesSent += int64(data)
 		client.log.Printf("sent %d bytes \n", data)
-		progress := map[string]interface{}{
+		entry := map[string]interface{}{
+			"jobId":      jobId,
 			"sent":       bytesSent,
 			"total":      fileInfo.Size(),
 			"percentage": (bytesSent / fileInfo.Size()) * 100,
 		}
-		wr.EventsEmit(client.ctx, "file:progress", progress)
+		wr.EventsEmit(client.ctx, "file:progress", entry)
 	}
 
 	return nil

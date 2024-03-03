@@ -18,8 +18,8 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
+import { Host, Job, store } from "./store/store";
 import { Progress } from "./components/ui/progress";
-import { Host, store } from "./store/store";
 
 function App() {
   const host = store((state) => state.user);
@@ -27,6 +27,7 @@ function App() {
   const addHost = store((state) => state.addHost);
   const updateIp = store((state) => state.updateIp);
   const setScanFinished = store((state) => state.setFinishedScan);
+  const updateProgress = store((state) => state.updateProgress);
 
   useEffect(() => {
     EventsOn("local:ip", (data: any) => {
@@ -44,6 +45,9 @@ function App() {
     });
     EventsOn("scan:done", (data: any) => {
       setScanFinished(true);
+    });
+    EventsOn("file:progress", (data: any) => {
+      updateProgress(data.jobId, data.sent, data.total, data.percentage);
     });
 
     const getLocalDetails = async () => {
@@ -207,17 +211,26 @@ const pathBuilder = (path: string) => {
 };
 
 const HostView = () => {
-  const setSelected = store((state) => state.setSelectedFile);
+  const addJob = store((state) => state.addJob);
   const navigate = useNavigate();
   const { state, pathname } = useLocation();
   const host = state.host;
   const tree = pathBuilder(pathname);
   const handleOpenFile = async () => {
     const file = await OpenFilesDialog();
-    setSelected(file);
-    SendFileToServer(host.ip, file);
+    const jobId = Math.floor(1000 + Math.random() * 9000).toString();
+    addJob({
+      jobId: jobId,
+      host: host,
+      file: file,
+      finished: false,
+      sent: 0,
+      total: 0,
+      percentage: 0,
+    });
+    SendFileToServer(jobId, host.ip, file);
     navigate("/queue", {
-      state: { from: pathname },
+      state: { host: host },
     });
   };
   return (
@@ -281,6 +294,7 @@ const HostView = () => {
 };
 
 const HostViewQueue = () => {
+  const jobs = store((state) => state.jobs);
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const tree = pathBuilder(pathname);
@@ -316,6 +330,34 @@ const HostViewQueue = () => {
           <p className="text-sm pl-2">Your queue</p>
         </div>
         <hr />
+        {jobs.map((job: Job) => {
+          let chunks = job.file.split("/");
+          return (
+            <div
+              className="min-h-[70px] rounded-md flex cursor-pointer hover:bg-slate-100 border border-slate-100"
+              onClick={(e) => {
+                e.preventDefault();
+              }}
+            >
+              <div className="w-1/4 flex justify-center items-center">
+                <UserAvatar
+                  user={{
+                    username: job.host?.username ?? null,
+                    avatar: job.host?.avatar ?? null,
+                  }}
+                  className="h-10 w-10"
+                />
+              </div>
+              <div className="flex flex-col justify-cente w-3/4 p-2">
+                <p className="font-md">{chunks[chunks.length - 1]}</p>
+                <div className="flex space-x-2 justify-center items-center">
+                  <Progress value={job.percentage} className="w-3/4" />
+                  <span className="text-sm">{job.percentage}%</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </>
   );

@@ -9,7 +9,11 @@ export type Host = {
   ip: string;
 };
 
-export type Progress = {
+export type Job = {
+  jobId: string;
+  host: Host;
+  file: string;
+  finished: boolean;
   sent: number;
   total: number;
   percentage: number;
@@ -24,14 +28,19 @@ interface StoreState {
   addHost: (host: Host) => void;
   clear: () => void;
 
+  jobs: Job[];
+  addJob: (job: Job) => void;
+  removeJob: (jobId: string) => void;
+  updateProgress: (
+    jobId: string,
+    sent: number,
+    total: number,
+    percentage: number
+  ) => void;
+  completeJob: (jobId: string) => void;
+
   finishedScan: boolean;
   setFinishedScan: (finishedScan: boolean) => void;
-
-  selectedFile: string | null;
-  setSelectedFile: (selectedFile: string | null) => void;
-
-  progress: Progress;
-  setProgress: (progress: Progress) => void;
 }
 
 export const store = create<StoreState>()((set) => ({
@@ -48,17 +57,25 @@ export const store = create<StoreState>()((set) => ({
   addHost: (host) => set((state) => ({ hosts: [...state.hosts, host] })),
   clear: () => set({ hosts: [] }),
 
+  jobs: [],
+  addJob: (job) => set((state) => ({ jobs: [...state.jobs, job] })),
+  removeJob: (jobId) =>
+    set((state) => ({
+      jobs: state.jobs.filter((job) => job.jobId !== jobId),
+    })),
+  updateProgress: (jobId, sent, total, percentage) =>
+    set((state) => ({
+      jobs: state.jobs.map((job) =>
+        job.jobId === jobId ? { ...job, sent, total, percentage } : job
+      ),
+    })),
+  completeJob: (jobId) =>
+    set((state) => ({
+      jobs: state.jobs.map((job) =>
+        job.jobId === jobId ? { ...job, finished: true } : job
+      ),
+    })),
+
   finishedScan: false,
   setFinishedScan: (finishedScan) => set({ finishedScan }),
-
-  selectedFile: null,
-  setSelectedFile: (selectedFile) => set({ selectedFile }),
-
-  progress: {
-    sent: 0,
-    total: 0,
-    percentage: 0,
-  },
-
-  setProgress: (progress) => set({ progress }),
 }));
