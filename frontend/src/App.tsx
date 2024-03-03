@@ -334,7 +334,7 @@ const HostViewQueue = () => {
           let chunks = job.file.split("/");
           return (
             <div
-              className="min-h-[70px] rounded-md flex cursor-pointer hover:bg-slate-100 border border-slate-100"
+              className="min-h-[70px] max-h-[70px] rounded-md flex cursor-pointer hover:bg-slate-100 border border-slate-100"
               onClick={(e) => {
                 e.preventDefault();
               }}
@@ -349,7 +349,7 @@ const HostViewQueue = () => {
                 />
               </div>
               <div className="flex flex-col justify-cente w-3/4 p-2">
-                <p className="font-md">{chunks[chunks.length - 1]}</p>
+                <p className="font-sm truncate">{chunks[chunks.length - 1]}</p>
                 <div className="flex space-x-2 justify-center items-center">
                   <Progress value={job.percentage} className="w-3/4" />
                   <span className="text-sm">{job.percentage}%</span>
