@@ -299,6 +299,21 @@ const HostViewQueue = () => {
   const { pathname } = useLocation();
   const tree = pathBuilder(pathname);
 
+  const displayTitleHelper = (path: string) => {
+    let title;
+    let paths = path.split("/");
+    let last = paths.slice(paths.length - 1, paths.length);
+    let chunks = last.toString().split(" ");
+    if (chunks.length > 5) {
+      let first = chunks.slice(0, 5).join(" ");
+      let ext = last.toString().split(".")[1];
+      return (title = `${first}.${ext}`);
+    }
+    title = last.toString();
+
+    return title;
+  };
+
   return (
     <>
       <div className="min-h-75px px-2 flex justify-between items-center">
@@ -325,13 +340,14 @@ const HostViewQueue = () => {
           className="hover:bg-transparent hover:text-current cursor-default"
         ></Button>
       </div>
-      <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
+      <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200 overflow-y-auto">
         <div className="flex flex-col space-y-2">
           <p className="text-sm pl-2">Your queue</p>
         </div>
         <hr />
         {jobs.map((job: Job) => {
-          let chunks = job.file.split("/");
+          let title = displayTitleHelper(job.file);
+          LogInfo(title);
           return (
             <div
               className="min-h-[70px] max-h-[70px] rounded-md flex cursor-pointer hover:bg-slate-100 border border-slate-100"
@@ -339,19 +355,13 @@ const HostViewQueue = () => {
                 e.preventDefault();
               }}
             >
-              <div className="w-1/4 flex justify-center items-center">
-                <UserAvatar
-                  user={{
-                    username: job.host?.username ?? null,
-                    avatar: job.host?.avatar ?? null,
-                  }}
-                  className="h-10 w-10"
-                />
-              </div>
-              <div className="flex flex-col justify-cente w-3/4 p-2">
-                <p className="font-sm truncate">{chunks[chunks.length - 1]}</p>
-                <div className="flex space-x-2 justify-center items-center">
-                  <Progress value={job.percentage} className="w-3/4" />
+              <div className="flex flex-col justify-center w-full p-2">
+                <div className="flex space-x-2 items-center">
+                  <Icons.file className="min-w-4 min-h-5" />
+                  <p className="text-sm truncate max-w-[3/4]">{title}</p>
+                </div>
+                <div className="flex space-x-2 justify-between items-center">
+                  <Progress value={job.percentage} />
                   <span className="text-sm">{job.percentage}%</span>
                 </div>
               </div>

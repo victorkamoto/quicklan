@@ -5,6 +5,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  File,
   ListStart,
   Loader2,
   Minimize2,
@@ -15,6 +16,8 @@ import { type JSX, type SVGProps } from "react";
 export const Icons = {
   close: Cross1Icon,
   queue: ListStart,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  file: File,
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   spinner: Loader2,
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

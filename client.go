@@ -93,8 +93,8 @@ func (client *Client) sendFile(jobId string, host string, path string) error {
 		percentage := (float64(bytesSent) / float64(fileInfo.Size())) * 100
 		entry := map[string]interface{}{
 			"jobId":      jobId,
-			"sent":       bytesSent,
-			"total":      fileInfo.Size(),
+			"sent":       bytesSent / 1024 / 1024,
+			"total":      fileInfo.Size() / 1024 / 1024,
 			"percentage": int(percentage),
 		}
 		wr.EventsEmit(client.ctx, "file:progress", entry)
