@@ -18,44 +18,37 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-import { Provider, atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Progress } from "./components/ui/progress";
-
-export type Host = {
-  username?: string | null;
-  name?: string | null;
-  homeDir?: string | null;
-  host?: string | null;
-  avatar?: string | null;
-  ip: string | null;
-};
-
-type Progress = {
-  sent: number;
-  total: number;
-  percentage: number;
-};
-
-const hostsAtom = atom<Host[]>([]);
-const scanDoneAtom = atom<boolean>(false);
-const hostAtom = atom<Host | null>(null);
-const selectedFile = atom<string | null>(null);
-const progressAtom = atom<Progress | null>(null);
+import { Host, store } from "./store/store";
 
 function App() {
-  const [host, setHost] = useAtom(hostAtom);
-  const setProgress = useSetAtom(progressAtom);
+  const host = store((state) => state.user);
+  const setUser = store((state) => state.setUser);
+  const addHost = store((state) => state.addHost);
+  const updateIp = store((state) => state.updateIp);
+  const setScanFinished = store((state) => state.setFinishedScan);
 
   useEffect(() => {
     EventsOn("local:ip", (data: any) => {
-      setHost((host) => ({ ...host, ip: data }));
+      updateIp(data);
     });
-    EventsOn("file:progress", (data: any) => {
-      setProgress(data);
+    EventsOn("host:up", (data: any) => {
+      let host: Host = {
+        username: "vic",
+        host: "devpc",
+        homeDir: "/home/vic",
+        avatar: "",
+        ip: data,
+      };
+      addHost(host);
     });
+    EventsOn("scan:done", (data: any) => {
+      setScanFinished(true);
+    });
+
     const getLocalDetails = async () => {
       const details = await GetLocalDetails();
-      setHost(details as Host);
+      setUser(details as Host);
     };
     const getHosts = async () => {
       await RunScanner();
@@ -65,54 +58,41 @@ function App() {
   }, []);
 
   return (
-    <Provider>
-      <div className="flex min-h-screen flex-col">
-        <header className="bg-background border-b border-slate-200">
-          <div className="container flex h-16 items-center justify-between py-4">
-            <nav></nav>
-            <UserNav
-              user={{
-                username: host?.username ?? "",
-                avatar: "",
-                ip: host?.ip ?? "",
-              }}
-            />
-          </div>
-        </header>
-        <main className="min-h-[375px] p-2 flex flex-col px-4">
-          <MemoryRouter>
-            <Routes>
-              <Route path="/" element={<Hosts />} />
-              <Route path="/host" element={<HostView />} />
-              <Route path="/queue" element={<HostViewQueue />} />
-            </Routes>
-          </MemoryRouter>
-        </main>
-        <footer className="min-h-[60px] border-t border-slate-200"></footer>
-      </div>
-    </Provider>
+    <div className="flex min-h-screen flex-col">
+      <header className="bg-background border-b border-slate-200">
+        <div className="container flex h-16 items-center justify-between py-4">
+          <nav></nav>
+          <UserNav
+            user={{
+              username: host?.username,
+              avatar: "",
+              ip: host?.ip,
+              host: host?.host,
+              homeDir: host?.homeDir,
+            }}
+          />
+        </div>
+      </header>
+      <main className="min-h-[375px] p-2 flex flex-col px-4">
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<Hosts />} />
+            <Route path="/host" element={<HostView />} />
+            <Route path="/queue" element={<HostViewQueue />} />
+          </Routes>
+        </MemoryRouter>
+      </main>
+      <footer className="min-h-[60px] border-t border-slate-200"></footer>
+    </div>
   );
 }
 
 const Hosts = () => {
   const navigate = useNavigate();
-  const [hosts, setHosts] = useAtom(hostsAtom);
-  const [scanDone, setScanDone] = useAtom(scanDoneAtom);
-
-  useEffect(() => {
-    EventsOn("host:up", (data: any) => {
-      let host: Host = {
-        username: "vic",
-        host: "devpc",
-        avatar: "",
-        ip: data,
-      };
-      setHosts((hosts) => [...hosts, host]);
-    });
-    EventsOn("scan:done", (data: any) => {
-      setScanDone(true);
-    });
-  }, []);
+  const hosts = store((state) => state.hosts);
+  const clearHosts = store((state) => state.clear);
+  const scanDone = store((state) => state.finishedScan);
+  const setScanDone = store((state) => state.setFinishedScan);
 
   return (
     <>
@@ -130,7 +110,7 @@ const Hosts = () => {
                 onClick={(e) => {
                   e.preventDefault();
                   setScanDone(false);
-                  setHosts([]);
+                  clearHosts();
                   RunScanner();
                 }}
               >
@@ -227,7 +207,7 @@ const pathBuilder = (path: string) => {
 };
 
 const HostView = () => {
-  const setSelected = useSetAtom(selectedFile);
+  const setSelected = store((state) => state.setSelectedFile);
   const navigate = useNavigate();
   const { state, pathname } = useLocation();
   const host = state.host;

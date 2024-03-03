@@ -1,6 +1,6 @@
 "use client";
 
-import { Host } from "../App";
+import { Host } from "../store/store";
 import {
   DropdownMenu,
   DropdownMenuContent,
