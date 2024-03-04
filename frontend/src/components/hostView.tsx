@@ -31,7 +31,7 @@ export const HostView = () => {
   };
   return (
     <>
-      <div className="min-h-75px px-2 flex justify-between items-center">
+      <div className="min-h-75px px-4 flex justify-between items-center">
         <div className="flex space-x-1">
           {tree.map((path, index) => (
             <div
@@ -51,11 +51,16 @@ export const HostView = () => {
         </div>
         <Button
           size={"icon"}
-          variant={"ghost"}
-          className="hover:bg-transparent hover:text-current cursor-default"
-        ></Button>
+          variant={"outline"}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate("/queue");
+          }}
+        >
+          <Icons.queue className="w-4 h-5" />
+        </Button>
       </div>
-      <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200">
+      <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200 bg-slate-50">
         <div className="flex p-2 px-3 cursor-default justify-between items-center">
           <div className="flex space-x-4 p-1">
             <div className="w-1/4 flex justify-center items-center">

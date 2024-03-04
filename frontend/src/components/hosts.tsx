@@ -80,10 +80,10 @@ export const Hosts = () => {
           </div>
         )}
       </div>
-      <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200 overflow-y-auto">
+      <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200 overflow-y-auto bg-slate-50">
         {hosts.map((host, index) => (
           <div
-            className="min-h-[70px] rounded-md flex cursor-pointer hover:bg-slate-100 border border-slate-100"
+            className="min-h-[70px] rounded-md flex cursor-pointer hover:bg-slate-100 border border-slate-100 bg-white"
             onClick={(e) => {
               e.preventDefault();
               navigate("/host", {

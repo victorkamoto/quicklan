@@ -39,9 +39,9 @@ export const HostViewQueue = () => {
           className="hover:bg-transparent hover:text-current cursor-default"
         ></Button>
       </div>
-      <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200 overflow-y-auto">
+      <div className="min-h-[310px] max-h-[310px] rounded-md mt-2 p-2 space-y-2 border border-slate-200 overflow-y-auto bg-slate-50">
         <div className="flex flex-col space-y-2">
-          <p className="text-sm pl-2">Your queue</p>
+          <p className="text-sm pl-2">Queue</p>
         </div>
         <hr />
         {jobs.map((job: Job) => {
